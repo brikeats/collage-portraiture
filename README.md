@@ -20,3 +20,11 @@ After you've update the color `rects` and run the whole notebook, you should hav
 ## Prepare reference photo
 
 Crop and edit the photo as you see fit. Adjust the contrast so it looks good and vivid. Use AI tools to erase objects you want to remove. I often use the smudge tool in GIMP to blur and demphasize the background. Remember it doesn't have to be perfect, since the whole photo is blurred as a processing step. That said, try to keep the face in focus and blur the background.
+
+## Convert reference photo to segmentation image
+
+The script `make_seg_image.py` rounds the pixels of the reference photo to the closest paper color. It produces a `segmentation.png` file which is a preview of your final piece. To run this script on the included image of my greyhound, Delilah:
+
+`python make_seg_image.py --debug delilah.jpg`
+
+You can edit the segmentation photo as you see fit using GIMP or photoshop or whatever. Make sure that you only use the paper colors that are included in the segmentation photo (i.e., don't use blurring or smudge tools that introduce new pixel values).
