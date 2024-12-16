@@ -1,12 +1,10 @@
 import argparse
 from os import path, makedirs
 import json
-import matplotlib.pyplot as plt
 import numpy as np
 from skimage import io
 from skimage.transform import rescale
 from skimage.morphology import remove_small_holes, remove_small_objects
-from skimage.color import label2rgb
 from skimage.filters import gaussian
 
 
