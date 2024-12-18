@@ -4,8 +4,20 @@ import json
 import numpy as np
 from skimage import io
 from skimage.transform import rescale
-from skimage.morphology import remove_small_holes, remove_small_objects
 from skimage.filters import gaussian
+
+
+def compute_grayscale_thresholds(color_dict):
+    gray_colors = {name: sum(color)/3 for name, color in color_dict.items()}
+    grays = list(gray_colors.values())
+    thresholds = [0] + [(c1+c2)/2 for c1, c2 in zip(grays[:-1], grays[1:])] + [255]
+    names = gray_colors.keys()
+    thresh_dict = {
+        color: (sta, end) 
+        for color, (sta, end) in zip(names, zip(thresholds[:-1], thresholds[1:]))
+    }
+    return thresh_dict
+
 
 
 if __name__ == '__main__':
@@ -48,14 +60,7 @@ if __name__ == '__main__':
         io.imsave(gray_fn, blurred)
 
     # set thresholds to lie halfway between paper colors
-    gray_colors = {name: sum(color)/3 for name, color in colors.items()}
-    grays = list(gray_colors.values())
-    thresholds = [0] + [(c1+c2)/2 for c1, c2 in zip(grays[:-1], grays[1:])] + [255]
-    names = gray_colors.keys()
-    thresh_dict = {
-        color: (sta, end) 
-        for color, (sta, end) in zip(names, zip(thresholds[:-1], thresholds[1:]))
-    }
+    thresh_dict = compute_grayscale_thresholds(colors)
     for color, (sta, end) in thresh_dict.items():
         print(f'{color} values: {sta:.1f} - {end:.1f} (width {end-sta:.1f})')
 
@@ -63,8 +68,6 @@ if __name__ == '__main__':
     seg_im = np.empty(im.shape, np.uint8)
     for (low, hi), rgb in zip(thresh_dict.values(), colors.values()):
         mask = np.logical_and(blurred>=low, blurred<hi)
-        # mask = remove_small_holes(mask, args.min_size)  # usually not a good idea: removes important face details
-        # mask = remove_small_objects(mask, args.min_size)
         value = int(round((low+hi)/2))
         seg_im[mask] = rgb
     seg_fn = path.join(args.out_dir, 'segmentation.png')  # use png; jpeg shows artifacts
