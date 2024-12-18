@@ -25,6 +25,14 @@ Crop and edit the photo as you see fit. Adjust the contrast so it looks good and
 
 The script `make_seg_image.py` rounds the pixels of the reference photo to the closest paper color. It produces a `segmentation.png` file which is a preview of your final piece. To run this script on the included image of my greyhound, Delilah:
 
-`python make_seg_image.py --debug delilah.jpg`
+`python make_seg_image.py --out-dir output-ims delilah.jpg`
+
+## Convert segmentation image to outlines
 
 You can edit the segmentation photo as you see fit using GIMP or photoshop or whatever. Make sure that you only use the paper colors that are included in the segmentation photo (i.e., don't use blurring or smudge tools that introduce new pixel values).
+
+To print outline images for transferring cut lines to your paper:
+
+`python seg_image_to_print_pages.py --target-len 12 --out-dir output-ims/print output-ims/segmentation-edited.png`
+
+Apparently my printer always prints images at 100 dpi. 
