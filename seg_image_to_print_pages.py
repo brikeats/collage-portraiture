@@ -1,18 +1,42 @@
 import argparse
 import json
 from os import makedirs, path
-from skimage import io, morphology
+from skimage import io
 import numpy as np
-import matplotlib.pyplot as plt
 from skimage.measure import label
 from skimage.segmentation import find_boundaries
 from skimage.transform import rescale
 import imageio
 from make_seg_image import compute_grayscale_thresholds
+from printer_calibration import PRINTER_DPI, PRINTER_CANVAS_SIZE
 
-# adjust these as per your printer
-PRINTER_DPI = 100
 
+def tile_image(im, tile_frame_thickness=2):
+    # im should be a 2d 8-bit image array
+    page_size_px = np.round(np.array(PRINTER_CANVAS_SIZE) * PRINTER_DPI).astype(int)
+    grid_shape = np.ceil(np.array(im.shape[:2]) / page_size_px).astype(int)
+    t = tile_frame_thickness
+    tiles = []
+    for i in range(grid_shape[0]):
+        ista = i * page_size_px[0]
+        iend = min(ista+page_size_px[0], im.shape[0])
+        tile_row = []
+        for j in range(grid_shape[1]):
+            jsta = j * page_size_px[1]
+            jend = min(jsta+page_size_px[1], im.shape[1])
+            tile_src = im[ista:iend, jsta:jend]
+            tile_src[:t] = 0
+            tile_src[-t:] = 0
+            tile_src[:,:t] = 0
+            tile_src[:,-t:] = 0
+            tile = 255 * np.ones(page_size_px, dtype=im.dtype)
+            iend_dst = min(page_size_px[0], tile_src.shape[0])
+            jend_dst = min(page_size_px[1], tile_src.shape[1])
+            tile[:iend_dst, :jend_dst] = tile_src
+            tile_row.append(tile)
+        tiles.append(tile_row)
+    return tiles
+        
 
 if __name__ == '__main__':
 
@@ -28,7 +52,7 @@ if __name__ == '__main__':
         colors = json.load(f)
     thresh_dict = compute_grayscale_thresholds(colors)
     im = io.imread(args.seg_file)[:,:,:3]
-    
+
     target_num_pixels = PRINTER_DPI * args.target_len
     scale_factor = target_num_pixels / max(im.shape[:2])
     gray = im.sum(-1) / 3
@@ -37,28 +61,17 @@ if __name__ == '__main__':
     print(f'Final size of piece: {physical_size[0]:.1f} tall X {physical_size[1]:.1f} inches wide')
 
     # outputs
-    cut_dir = path.join(args.out_dir, 'cuts')
-    makedirs(cut_dir, exist_ok=True)
-    fg_dir = path.join(args.out_dir, 'foreground')
-    makedirs(fg_dir, exist_ok=True)
+    makedirs(args.out_dir, exist_ok=True)
 
     # the first page is not cut, so the print page for it should only contain fiducials
     for paper_num, (color_name, color) in enumerate(colors.items()):
         (low_gray_val, _) = thresh_dict[color_name]
-
         fg_mask = gray >= low_gray_val
-        fg_fn = path.join(fg_dir, f'{color_name}_fg.png')
-        fg_mask = 255 * fg_mask.astype(np.uint8)
-        print(f'Saving {color_name} foreground mask to {fg_fn}')
-        imageio.imwrite(fg_fn, fg_mask, dpi=[PRINTER_DPI,PRINTER_DPI])  # my printer seems to ignore this, but I'll leave it in anyway
-
         cut_lines_im = ~find_boundaries(label(fg_mask))
-        # add lines along image frame as fiducials
-        cut_lines_im[:2] = 0
-        cut_lines_im[-2:] = 0
-        cut_lines_im[:,:2] = 0
-        cut_lines_im[:,-2:] = 0
         cut_lines_im = 255 * cut_lines_im.astype(np.uint8)
-        cut_fn = path.join(cut_dir, f'{color_name}_cuts.png')
-        print(f'Saving {color_name} outline to {cut_fn}')
-        imageio.imwrite(cut_fn, cut_lines_im, dpi=[PRINTER_DPI,PRINTER_DPI])
+        tile_grid = tile_image(cut_lines_im)
+        for row_num, tile_row in enumerate(tile_grid):
+            for col_num, tile in enumerate(tile_row):
+                tile_fn = path.join(args.out_dir, f'{color_name}_cuts_row{row_num+1}_col{col_num+1}.png')
+                print(f'Saving {color_name} outline tile to {tile_fn}')
+                imageio.imwrite(tile_fn, tile, dpi=[PRINTER_DPI,PRINTER_DPI])
