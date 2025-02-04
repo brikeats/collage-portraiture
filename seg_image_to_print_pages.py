@@ -60,11 +60,10 @@ if __name__ == '__main__':
     physical_size = np.array(gray.shape[:2]) / PRINTER_DPI
     print(f'Final size of piece: {physical_size[0]:.1f} tall X {physical_size[1]:.1f} inches wide')
 
-    # outputs
-    makedirs(args.out_dir, exist_ok=True)
-
     # the first page is not cut, so the print page for it should only contain fiducials
     for paper_num, (color_name, color) in enumerate(colors.items()):
+        color_dir = path.join(args.out_dir, color_name)
+        makedirs(color_dir, exist_ok=True)
         (low_gray_val, _) = thresh_dict[color_name]
         fg_mask = gray >= low_gray_val
         cut_lines_im = ~find_boundaries(label(fg_mask))
@@ -72,6 +71,6 @@ if __name__ == '__main__':
         tile_grid = tile_image(cut_lines_im)
         for row_num, tile_row in enumerate(tile_grid):
             for col_num, tile in enumerate(tile_row):
-                tile_fn = path.join(args.out_dir, f'{color_name}_cuts_row{row_num+1}_col{col_num+1}.png')
+                tile_fn = path.join(color_dir, f'{color_name}_cuts_row{row_num+1}_col{col_num+1}.png')
                 print(f'Saving {color_name} outline tile to {tile_fn}')
                 imageio.imwrite(tile_fn, tile, dpi=[PRINTER_DPI,PRINTER_DPI])
