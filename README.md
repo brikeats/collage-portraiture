@@ -13,7 +13,7 @@ The first step is to determine the colors of the papers that you'll be using as 
 
 * Select papers. There should be at least 2 colors and they should form a harmonious color pallette. These scripts only deal with grayscale images; the colors are up to you. They should all be the same type/manufacturer so they expand and shrink together when the humidity changes.
 * Take a calibration photo of the papers and save it as `color-calibration/papers.jpg`. Take the photo with the lighting conditions similar to those that you will use to display the final piece. Stack and spread the papers so they form parallel "bars" in the image frame. Ideally, you should use the same camera you'll use for the reference photo. 
-* Use the notebook `color-calibration/Paper-Color-Calibration.ipynb` to create a set of colors for your papers. You'll need to edit the `rects` `dict` to select approprate the color patches from your photo.
+* Use the notebook `color-calibration/Paper-Color-Calibration.ipynb` to create a set of colors for your papers. You'll need to edit the `rects` `dict` to select approprate the color patches from your photo. The order of your `rects` determines the order that you will stack your papers, from back (deepest) to front (uppermost).
 
 After you've update the color `rects` and run the whole notebook, you should have a paper color file `color-calibration/paper-colors.json`.
 
@@ -44,3 +44,22 @@ To print outline images for transferring cut lines to your paper:
 
 `python seg_image_to_print_pages.py --target-len 12 --out-dir output-ims/print output-ims/segmentation-edited.png`
 
+## Print & Assemble
+
+* Print out the images in `out-ims/print`, one color at a time. Print them in order so they are easier to keep track of, and write the color and row/col of each printed page on the back. 
+* Cut carefully along 2 edges of each printed page (e.g. the top and left edges). For the other 2 edges, cut with a margin. For full page printouts, you won't have to cut because the printer will normally leave a margin.
+* Flip the pages over. Working row-by-row, then column-by-column, align the cut edge of one page with the line that marks the edge of the adjacent sheet. Overlap the margin that you left when cutting. Tape them together. [photo to illustrate this?]
+
+The end result should be a full-sized copy of the outlines for each page/color.
+
+## Transfer
+
+Start with a full-sized background of black. The black paper does not need to be cut.
+
+* Transfer outlines to each sheet of paper using carbon paper. Or scribble charcoal on the back of the taped print out. 
+* Cut with an exacto knife. 
+* Glue together with rubber cement to minimize warping/crinkling. 
+    * Carefully align the edges when gluing a large piece which intersects the edge of the piece.
+    * When gluing small "dots" that do not touch the edges, overlay the sheet that they're cut from to place them correctly.
+
+Mirroring?
